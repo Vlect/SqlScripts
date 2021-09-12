@@ -263,3 +263,28 @@ SELECT
   GROUP BY (G.id), (S.id)
   ORDER BY (G.id), (S.name) 
 
+
+  -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  -- FINAL SCRIPT
+
+  SELECT 
+  HQ.id,
+  HQ.name,
+  HQ.institution_id,
+  GU.grade_id
+  FROM talentumehs_valle_open_location.headquarters HQ
+  JOIN talentumehs_valle_magico.game_users GU
+    ON GU.headquarter_id = HQ.id
+  JOIN talentumehs_valle_magico.game_user_records GUR 
+    ON GUR.game_user_id = GU.id 
+  JOIN talentumehs_valle_magico.mini_games MG 
+    ON GUR.mini_game_id = MG.id 
+    AND GU.grade_id = MG.grade_id 
+  JOIN talentumehs_valle_magico.subject_mini_game SMG 
+    ON SMG.mini_game_id = MG.id 
+  RIGHT JOIN talentumehs_valle_magico.subjects S 
+    ON SMG.subject_id = S.id 
+  WHERE GU.headquarter_id = 500
+  GROUP BY (GU.grade_id) 
+  ORDER BY (GU.grade_id)
