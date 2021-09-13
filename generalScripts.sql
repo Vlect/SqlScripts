@@ -268,23 +268,89 @@ SELECT
 
   -- FINAL SCRIPT
 
-  SELECT 
-  HQ.id,
-  HQ.name,
-  HQ.institution_id,
-  GU.grade_id
-  FROM talentumehs_valle_open_location.headquarters HQ
-  JOIN talentumehs_valle_magico.game_users GU
-    ON GU.headquarter_id = HQ.id
-  JOIN talentumehs_valle_magico.game_user_records GUR 
-    ON GUR.game_user_id = GU.id 
-  JOIN talentumehs_valle_magico.mini_games MG 
-    ON GUR.mini_game_id = MG.id 
-    AND GU.grade_id = MG.grade_id 
-  JOIN talentumehs_valle_magico.subject_mini_game SMG 
-    ON SMG.mini_game_id = MG.id 
-  RIGHT JOIN talentumehs_valle_magico.subjects S 
-    ON SMG.subject_id = S.id 
-  WHERE GU.headquarter_id = 500
-  GROUP BY (GU.grade_id) 
-  ORDER BY (GU.grade_id)
+SELECT 
+	DP.id as 'department_id',
+    DP.name as 'department_name',
+    TW.id as 'town_id',
+    TW.name as 'town_name',
+    HQ.id as 'headquarter_id',
+    HQ.name as 'headquarter_name',
+    GU.grade_id as 'grade_id',
+    S.id as 'subject_id',
+    S.name as 'subject_name'
+	FROM talentumehs_valle_open_location.departments DP 
+      JOIN talentumehs_valle_open_location.towns TW 
+        ON TW.department_id = DP.id 
+      JOIN talentumehs_valle_open_location.headquarters HQ 
+        ON HQ.town_id = TW.id 
+      JOIN talentumehs_valle_magico.game_users GU 
+        ON GU.headquarter_id = HQ.id 
+      JOIN talentumehs_valle_magico.game_user_records GUR 
+        ON GUR.game_user_id = GU.id 
+      JOIN talentumehs_valle_magico.mini_games MG 
+        ON GUR.mini_game_id = MG.id 
+        AND GU.grade_id = MG.grade_id 
+      JOIN talentumehs_valle_magico.subject_mini_game SMG 
+        ON SMG.mini_game_id = MG.id 
+      RIGHT JOIN talentumehs_valle_magico.subjects S 
+        ON SMG.subject_id = S.id 
+      GROUP BY (TW.id), (HQ.id), (GU.grade_id), (S.id)
+      ORDER BY (TW.name), (HQ.id), (GU.grade_id)
+
+
+
+
+
+
+
+
+
+SELECT 
+	  TSBUS.institutions_id,
+      TSBUS.institutions_name,
+      S.name,
+      ROUND(AVG(TSBUS.total_by_area/TSBU.total_by_user), 2) * 100 as 'Average'
+      FROM (
+        SELECT
+          IT.id as 'institutions_id',
+          IT.name as 'institutions_name',
+          GU.id as 'game_user_id',
+          DS.style_id as 'style',
+          COUNT(GUI.id) as 'total_by_area'
+          FROM talentumehs_valle_open_location.headquarters HQ
+          JOIN talentumehs_valle_open_location.institutions IT
+          	ON HQ.institution_id = IT.id
+          JOIN talentumehs_valle_magico.game_users GU
+            ON GU.headquarter_id = HQ.id
+          JOIN talentumehs_valle_magico.game_user_records GUR
+            ON GUR.game_user_id = GU.id
+          JOIN talentumehs_valle_magico.gu_record_intelligence_ind_desc_styles GUI
+            ON GUI.game_user_record_id = GUR.id
+          JOIN talentumehs_valle_magico.description_styles DS
+            ON GUI.description_style_id = DS.id
+          GROUP BY (DS.style_id), (GU.id) 
+      ) AS TSBUS
+      JOIN (
+        SELECT
+          IT.id as 'institutions_id',
+          IT.name as 'institutions_name',
+          GU.id,
+          COUNT(GUI.id) as 'total_by_user'
+          FROM talentumehs_valle_open_location.headquarters HQ
+          JOIN talentumehs_valle_open_location.institutions IT
+          	ON HQ.institution_id = IT.id
+          JOIN talentumehs_valle_magico.game_users GU
+            ON GU.headquarter_id = HQ.id
+          JOIN talentumehs_valle_magico.game_user_records GUR
+            ON GUR.game_user_id = GU.id
+          JOIN talentumehs_valle_magico.gu_record_intelligence_ind_desc_styles GUI
+            ON GUI.game_user_record_id = GUR.id
+          JOIN talentumehs_valle_magico.description_styles DS
+            ON GUI.description_style_id = DS.id
+          GROUP BY (GU.id)
+      ) AS TSBU 
+        ON TSBUS.game_user_id = TSBU.id
+      JOIN talentumehs_valle_magico.styles S
+        ON TSBUS.style = S.id
+      GROUP BY (TSBUS.style), (TSBUS.institutions_id)
+      ORDER BY (S.name)
